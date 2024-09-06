@@ -9,7 +9,7 @@ const ChatArea = ({ isDarkMode }) => {
     const [showLanguageOptions, setShowLanguageOptions] = useState(false);
     const [selectedLanguage, setSelectedLanguage] = useState('en');
     const [recognition, setRecognition] = useState(null);
-    const [loading , setLoading] = useState(false);
+    const [loading, setLoading] = useState(false); // Loader state
 
     const chatListRef = useRef(null);
 
@@ -25,14 +25,6 @@ const ChatArea = ({ isDarkMode }) => {
         Malayalam: 'ml',
         Odia: 'or'
     };
-
-    // Commented out as this will now be handled by the backend
-    
-    const questionResponseMap = {
-        'what is your name': 'My name is Justibot. I am here to clear all your doubts regarding DoJ',
-        // More predefined responses...
-    };
-    
 
     useEffect(() => {
         if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
@@ -64,9 +56,11 @@ const ChatArea = ({ isDarkMode }) => {
             setMessages([...messages, userMessage]);
 
             try {
-                // Send the user input to the backend
+                // Show the loader while waiting for the bot's response
                 setLoading(true);
-                const response = await fetch('https://78ae-34-70-235-165.ngrok-free.app/chatbot', {
+
+                // Send the user input to the backend
+                const response = await fetch('https://5fbe-104-197-181-22.ngrok-free.app/chatbot', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -75,24 +69,29 @@ const ChatArea = ({ isDarkMode }) => {
                 });
 
                 const data = await response.json();
-                const botResponse = { type: 'bot', text: data.response };
-                console.log(data.response);
-                 // Assumes response is in data.response
+                let botResponseText = data.response;
+
+                // Trim the question if repeated in the response
+                if (botResponseText.toLowerCase().includes(input.toLowerCase())) {
+                    botResponseText = botResponseText.replace(new RegExp(input, 'i'), '').trim();
+                }
+
+                const botResponse = { type: 'bot', text: botResponseText };
 
                 setMessages([...messages, userMessage, botResponse]);
-                setLoading(false);
                 setInput('');
+                setLoading(false);
+                
 
                 // Optionally speak the response
-                const utterance = new SpeechSynthesisUtterance(data.response);
-                window.speechSynthesis.speak(utterance);
+                /* const utterance = new SpeechSynthesisUtterance(botResponseText);
+                window.speechSynthesis.speak(utterance); */
             } catch (error) {
                 console.error('Error fetching response:', error);
                 const botResponse = { type: 'bot', text: 'Sorry, something went wrong. Please try again later.' };
                 setMessages([...messages, userMessage, botResponse]);
+                setLoading(false); // Hide the loader on error
             }
-
-            
         }
     };
 
@@ -101,7 +100,6 @@ const ChatArea = ({ isDarkMode }) => {
         setMessages([...messages, userMessage]);
 
         try {
-            // Send the recognized text to the backend
             const response = await fetch('/your-backend-endpoint', {
                 method: 'POST',
                 headers: {
@@ -111,13 +109,18 @@ const ChatArea = ({ isDarkMode }) => {
             });
 
             const data = await response.json();
-            const botResponse = { type: 'bot', text: data.response };
+            let botResponseText = data.response;
+
+            // Trim the question if repeated in the response
+        
+
+            const botResponse = { type: 'bot', text: botResponseText };
 
             setMessages([...messages, userMessage, botResponse]);
 
             // Optionally speak the response
-            const utterance = new SpeechSynthesisUtterance(data.response);
-            window.speechSynthesis.speak(utterance);
+            /* const utterance = new SpeechSynthesisUtterance(botResponseText);
+            window.speechSynthesis.speak(utterance); */
         } catch (error) {
             console.error('Error fetching response:', error);
             const botResponse = { type: 'bot', text: 'Sorry, something went wrong. Please try again later.' };
@@ -160,6 +163,11 @@ const ChatArea = ({ isDarkMode }) => {
                         {msg.text}
                     </div>
                 ))}
+                {loading && (
+                    <div className="chat-message bot">
+                        <i>Generating response...</i> {/* Loader while waiting for response */}
+                    </div>
+                )}
             </div>
             <div className="input-area">
                 <input
@@ -199,6 +207,7 @@ const ChatArea = ({ isDarkMode }) => {
 };
 
 export default ChatArea;
+
 
 
 
