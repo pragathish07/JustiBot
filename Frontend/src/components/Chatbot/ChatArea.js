@@ -83,7 +83,7 @@ const ChatArea = ({ isDarkMode }) => {
                 setLoading(false);
                 
 
-                // Optionally speak the response
+                
                 /* const utterance = new SpeechSynthesisUtterance(botResponseText);
                 window.speechSynthesis.speak(utterance); */
             } catch (error) {
@@ -100,7 +100,7 @@ const ChatArea = ({ isDarkMode }) => {
         setMessages([...messages, userMessage]);
 
         try {
-            const response = await fetch('/your-backend-endpoint', {
+            const response = await fetch('/your-backend-endpoint-url', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
